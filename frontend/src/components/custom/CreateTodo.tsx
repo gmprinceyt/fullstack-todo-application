@@ -43,7 +43,7 @@ const CreateTodo = () => {
       })
       .then((data) => setTodo(data.data))
       .catch(() => {
-        toast.error("internal Server Issue");
+        toast.error("Data Not Loaded!");
       });
   }, []);
 
