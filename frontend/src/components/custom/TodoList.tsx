@@ -1,11 +1,8 @@
-import { Checkbox } from "@/components/ui/checkbox";
-import type { Todo, TodoResponse } from "@/types/types";
-import { Pencil, SaveIcon, Trash2 } from "lucide-react";
-import { useCallback, useState } from "react";
-import toast from "react-hot-toast";
-import { Input } from "../ui/input";
-import { Textarea } from "../ui/textarea";
+import type { EditMode, EditValues, Todo, TodoResponse, ToggleEdit } from "@/types/types";
+import { memo, useCallback, useState } from "react";
 
+import toast from "react-hot-toast";
+import TodoItem from "./TodoItem";
 const TodoList = ({
   todos,
   setTodo,
@@ -13,12 +10,8 @@ const TodoList = ({
   todos: Todo[];
   setTodo: React.Dispatch<React.SetStateAction<Todo[]>>;
 }) => {
-  const [editMode, setEditMode] = useState<{
-    [id: string]: { title: boolean; description: boolean };
-  }>({});
-  const [editValues, setEditValues] = useState<{
-    [id: string]: { title?: string; description?: string };
-  }>({});
+  const [editMode, setEditMode] = useState<EditMode>({});
+  const [editValues, setEditValues] = useState<EditValues>({});
 
   const complateTodoHandler = useCallback(
     async (id: string, value: boolean) => {
@@ -32,8 +25,8 @@ const TodoList = ({
             complate: value,
           }),
         });
-        setTodo(
-          todos.map((todo) =>
+        setTodo((prev) =>
+          prev.map((todo) =>
             todo._id === id ? { ...todo, complate: value } : todo
           )
         );
@@ -45,7 +38,7 @@ const TodoList = ({
         toast.error("Failed To Complate Todo");
       }
     },
-    [setTodo, todos]
+    [setTodo]
   );
 
   const DeleteTodoHandler = useCallback(
@@ -55,14 +48,14 @@ const TodoList = ({
           method: "DELETE",
         });
 
-        setTodo(todos.filter((todo) => todo._id !== id));
+        setTodo((prev) => prev.filter((todo) => todo._id !== id));
         toast.success("Todo Deleted");
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
       } catch (error) {
         toast.error("Todo Not Delete yet!");
       }
     },
-    [setTodo, todos]
+    [setTodo]
   );
 
   const UpdateTodo = useCallback(
@@ -78,7 +71,9 @@ const TodoList = ({
 
         const data: TodoResponse = await res.json();
 
-        setTodo(todos.map((todo) => (todo._id === id ? data.data : todo)));
+        setTodo((prev) =>
+          prev.map((todo) => (todo._id === id ? data.data : todo))
+        );
 
         setEditMode((prev) => ({
           ...prev,
@@ -91,153 +86,47 @@ const TodoList = ({
         toast.error("Todo Not Updated!");
       }
     },
-    [editValues, setTodo, todos]
+    [editValues, setTodo]
   );
 
-const toggleEdit = useCallback( (
-    id: string,
-    field: "title" | "description",
-    value: boolean,
-    current: string
-  ) => {
-    setEditMode((prev) => ({
-      ...prev,
-      [id]: { ...prev[id], [field]: value },
-    }));
-    setEditValues((prev) => ({
-      ...prev,
-      [id]: { ...prev[id], [field]: current },
-    }));
-  }, [])
+  const toggleEdit:ToggleEdit  = useCallback(
+    (
+      id: string,
+      field: "title" | "description",
+      value: boolean,
+      current: string
+    ) => {
+      setEditMode((prev) => ({
+        ...prev,
+        [id]: { ...prev[id], [field]: value },
+      }));
+      setEditValues((prev) => ({
+        ...prev,
+        [id]: { ...prev[id], [field]: current },
+      }));
+    },
+    []
+  );
+
 
   return (
-    <div>
-      {todos ? (
-        todos.map((todo, i) => {
-          const isEditing = editMode[todo._id] || {};
-          const edits = editValues[todo._id] || {};
-          return (
-            <div
-              key={todo._id}
-              className="flex gap-1 mb-1 items-center shadow-md p-1.5  rounded-md"
-            >
-              <div
-                className={`hover:bg-accent/50 w-sm flex items-start gap-3 rounded-lg border p-3 ${
-                  todo.complate
-                    ? "has-[[aria-checked=true]]:line-through  has-[[aria-checked=true]]:border-green-600 has-[[aria-checked=true]]:bg-green-50 dark:has-[[aria-checked=true]]:border-green-900 dark:has-[[aria-checked=true]]:bg-green-950"
-                    : ""
-                }`}
-              >
-                <Checkbox
-                  id="toggle-2"
-                  checked={todo.complate}
-                  onCheckedChange={(checked) =>
-                    !isEditing.title && !isEditing.description
-                      ? complateTodoHandler(todo._id, Boolean(checked))
-                      : toast.error("Update Todo After Complate")
-                  }
-                  className="data-[state=checked]:border-green-600 data-[state=checked]:bg-green-600 data-[state=checked]:text-white dark:data-[state=checked]:border-green-700 dark:data-[state=checked]:bg-green-700"
-                />
-                <div className="grid gap-1.5 font-normal">
-                  <div className="flex gap-1 items-center">
-                    <b>{i + 1}. </b>
-
-                    {isEditing.title ? (
-                      <div className="flex items-center gap-1 ">
-                        <Input
-                          value={edits.title ?? ""}
-                          onChange={(e) =>
-                            setEditValues((prev) => ({
-                              ...prev,
-                              [todo._id]: {
-                                ...prev[todo._id],
-                                title: e.target.value,
-                              },
-                            }))
-                          }
-                        />
-                        <span
-                          onClick={() => UpdateTodo(todo._id)}
-                          className="bg-yellow-900 p-1.5 cursor-pointer  rounded-md text-yellow-400 hover:bg-orange-700"
-                        >
-                          <SaveIcon size={14} strokeWidth={3} />
-                        </span>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-1 justify-between">
-                        <small className="text-xs leading-none font-medium flex gap-2">
-                          {todo.title}
-                        </small>
-                        <span
-                          onClick={() => {
-                            toggleEdit(todo._id, "title", true, todo.title);
-                          }}
-                          className="bg-yellow-900 p-1 cursor-pointer rounded-md text-yellow-400 hover:bg-orange-700"
-                        >
-                          <Pencil size={11} strokeWidth={3} />
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                  <div className="">
-                    {isEditing.description ? (
-                      <div className="flex items-center gap-1 ">
-                        <Textarea
-                          value={edits.description ?? ""}
-                          onChange={(e) =>
-                            setEditValues((prev) => ({
-                              ...prev,
-                              [todo._id]: {
-                                ...prev[todo._id],
-                                description: e.target.value,
-                              },
-                            }))
-                          }
-                        />
-                        <span
-                          onClick={() => UpdateTodo(todo._id)}
-                          className="bg-yellow-900 p-1.5 cursor-pointer  rounded-md text-yellow-400 hover:bg-orange-700"
-                        >
-                          <SaveIcon size={14} strokeWidth={3} />
-                        </span>
-                      </div>
-                    ) : (
-                      <div className="flex items-center gap-1 justify-between">
-                        <p className="text-xs text-muted-foreground">
-                          {todo.description}
-                        </p>
-                        <span
-                          onClick={() => {
-                            toggleEdit(
-                              todo._id,
-                              "description",
-                              true,
-                              todo.description
-                            );
-                          }}
-                          className="bg-yellow-900 p-1 cursor-pointer rounded-md text-yellow-400 hover:bg-orange-700"
-                        >
-                          <Pencil size={11} strokeWidth={3} />
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-              <span
-                onClick={() => DeleteTodoHandler(todo._id)}
-                className="text-red-500 bg-red-950 py-4 px-3 rounded-sm cursor-pointer hover:bg-red-900"
-              >
-                <Trash2 />
-              </span>
-            </div>
-          );
-        })
-      ) : (
-        <p>Not Added</p>
-      )}
-    </div>
+    <>
+      {todos.map((todo, index) => {
+       return  <TodoItem
+          key={todo._id}
+          todo={todo}
+          editMode={editMode[todo._id]}
+          editValue={editValues[todo._id]}
+          toggleEdit={toggleEdit}
+          UpdateTodo={UpdateTodo}
+          DeleteTodoHandler={DeleteTodoHandler}
+          complateTodoHandler={complateTodoHandler}
+          setEditValues={setEditValues}
+          i={index}
+        />
+      })}
+    </>
   );
 };
 
-export default TodoList;
+export default memo(TodoList);

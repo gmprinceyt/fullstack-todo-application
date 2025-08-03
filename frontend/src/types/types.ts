@@ -8,6 +8,19 @@ export type Todo = {
 };
 
 export interface TodoResponse {
-   message: string;
-   data: Todo;
+  message: string;
+  data: Todo;
 }
+
+export type EditMode = {
+  [id: string]: { title: boolean; description: boolean };
+};
+export type EditValues = {
+  [id: string]: { title?: string; description?: string };
+};
+export type ToggleEdit = (
+  id: string,
+  field: "title" | "description",
+  value: boolean,
+  current: string
+) => void;
