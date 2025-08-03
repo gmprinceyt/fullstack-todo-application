@@ -1,7 +1,7 @@
 import { Checkbox } from "@/components/ui/checkbox";
 import type { Todo, TodoResponse } from "@/types/types";
 import { Pencil, SaveIcon, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import toast from "react-hot-toast";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
@@ -13,72 +13,93 @@ const TodoList = ({
   todos: Todo[];
   setTodo: React.Dispatch<React.SetStateAction<Todo[]>>;
 }) => {
-const [editMode, setEditMode] = useState<{[id: string]: {title:boolean, description:boolean}}>({});
-const [editValues, setEditValues] = useState<{[id: string]: {title?:string, description?:string}}>({});
+  const [editMode, setEditMode] = useState<{
+    [id: string]: { title: boolean; description: boolean };
+  }>({});
+  const [editValues, setEditValues] = useState<{
+    [id: string]: { title?: string; description?: string };
+  }>({});
 
-  async function complateTodoHandler(id: string, value: boolean) {
-    try {
-      fetch(`http://localhost:3000/api/v1/todo/${id}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          complate: value,
-        }),
-      });
-      setTodo(
-        todos.map((todo) =>
-          todo._id === id ? { ...todo, complate: value } : todo
-        )
-      );
+  const complateTodoHandler = useCallback(
+    async (id: string, value: boolean) => {
+      try {
+        fetch(`http://localhost:3000/api/v1/todo/${id}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            complate: value,
+          }),
+        });
+        setTodo(
+          todos.map((todo) =>
+            todo._id === id ? { ...todo, complate: value } : todo
+          )
+        );
 
-      toast.success(value ? "Todo Completed" : "Todo Pending");
+        toast.success(value ? "Todo Completed" : "Todo Pending");
 
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (error) {
-      toast.error("Failed To Complate Todo");
-    }
-  }
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      } catch (error) {
+        toast.error("Failed To Complate Todo");
+      }
+    },
+    [setTodo, todos]
+  );
 
-  async function DeleteTodoHandler(id: string) {
-    try {
-      await fetch(`http://localhost:3000/api/v1/todo/${id}`, {
-        method: "DELETE",
-      });
+  const DeleteTodoHandler = useCallback(
+    async (id: string) => {
+      try {
+        await fetch(`http://localhost:3000/api/v1/todo/${id}`, {
+          method: "DELETE",
+        });
 
-      setTodo(todos.filter((todo) => todo._id !== id));
-      toast.success("Todo Deleted");
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (error) {
-      toast.error("Todo Not Delete yet!");
-    }
-  }
+        setTodo(todos.filter((todo) => todo._id !== id));
+        toast.success("Todo Deleted");
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      } catch (error) {
+        toast.error("Todo Not Delete yet!");
+      }
+    },
+    [setTodo, todos]
+  );
 
-  async function UpdateTodo(id: string) {
-    try {
-      const res = await fetch(`http://localhost:3000/api/v1/todo/${id}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(editValues[id]),
-      });
+  const UpdateTodo = useCallback(
+    async function (id: string) {
+      try {
+        const res = await fetch(`http://localhost:3000/api/v1/todo/${id}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(editValues[id]),
+        });
 
-      const data: TodoResponse = await res.json();
-      
-      setTodo(todos.map((todo) => (todo._id === id ? data.data : todo)));
+        const data: TodoResponse = await res.json();
 
-      setEditMode((prev)=> ({...prev, [id]: {title: false, description:false}}));
-      setEditValues((prev) => ({ ...prev, [id]: {} }));
-      toast.success("Todo Updated");
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (error) {
-      toast.error("Todo Not Updated!");
-    }
-  };
+        setTodo(todos.map((todo) => (todo._id === id ? data.data : todo)));
 
-    const toggleEdit = (id: string, field: "title" | "description", value: boolean, current: string) => {
+        setEditMode((prev) => ({
+          ...prev,
+          [id]: { title: false, description: false },
+        }));
+        setEditValues((prev) => ({ ...prev, [id]: {} }));
+        toast.success("Todo Updated");
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      } catch (error) {
+        toast.error("Todo Not Updated!");
+      }
+    },
+    [editValues, setTodo, todos]
+  );
+
+const toggleEdit = useCallback( (
+    id: string,
+    field: "title" | "description",
+    value: boolean,
+    current: string
+  ) => {
     setEditMode((prev) => ({
       ...prev,
       [id]: { ...prev[id], [field]: value },
@@ -87,14 +108,14 @@ const [editValues, setEditValues] = useState<{[id: string]: {title?:string, desc
       ...prev,
       [id]: { ...prev[id], [field]: current },
     }));
-  };
+  }, [])
 
   return (
     <div>
       {todos ? (
         todos.map((todo, i) => {
           const isEditing = editMode[todo._id] || {};
-          const edits  = editValues[todo._id] || {};
+          const edits = editValues[todo._id] || {};
           return (
             <div
               key={todo._id}
@@ -125,7 +146,15 @@ const [editValues, setEditValues] = useState<{[id: string]: {title?:string, desc
                       <div className="flex items-center gap-1 ">
                         <Input
                           value={edits.title ?? ""}
-                          onChange={(e) => setEditValues((prev)=> ({...prev, [todo._id]: { ...prev[todo._id], title: e.target.value }}))}
+                          onChange={(e) =>
+                            setEditValues((prev) => ({
+                              ...prev,
+                              [todo._id]: {
+                                ...prev[todo._id],
+                                title: e.target.value,
+                              },
+                            }))
+                          }
                         />
                         <span
                           onClick={() => UpdateTodo(todo._id)}
@@ -141,7 +170,7 @@ const [editValues, setEditValues] = useState<{[id: string]: {title?:string, desc
                         </small>
                         <span
                           onClick={() => {
-                            toggleEdit(todo._id, "title", true, todo.title)
+                            toggleEdit(todo._id, "title", true, todo.title);
                           }}
                           className="bg-yellow-900 p-1 cursor-pointer rounded-md text-yellow-400 hover:bg-orange-700"
                         >
@@ -154,10 +183,16 @@ const [editValues, setEditValues] = useState<{[id: string]: {title?:string, desc
                     {isEditing.description ? (
                       <div className="flex items-center gap-1 ">
                         <Textarea
-                          value={
-                            edits.description ?? ""
+                          value={edits.description ?? ""}
+                          onChange={(e) =>
+                            setEditValues((prev) => ({
+                              ...prev,
+                              [todo._id]: {
+                                ...prev[todo._id],
+                                description: e.target.value,
+                              },
+                            }))
                           }
-                          onChange={(e) => setEditValues((prev)=> ({...prev, [todo._id]: {...prev[todo._id], description: e.target.value}}))}
                         />
                         <span
                           onClick={() => UpdateTodo(todo._id)}
@@ -173,7 +208,12 @@ const [editValues, setEditValues] = useState<{[id: string]: {title?:string, desc
                         </p>
                         <span
                           onClick={() => {
-                            toggleEdit(todo._id, "description", true, todo.description)
+                            toggleEdit(
+                              todo._id,
+                              "description",
+                              true,
+                              todo.description
+                            );
                           }}
                           className="bg-yellow-900 p-1 cursor-pointer rounded-md text-yellow-400 hover:bg-orange-700"
                         >
