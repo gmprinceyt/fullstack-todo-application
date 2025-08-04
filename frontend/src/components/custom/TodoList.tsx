@@ -3,6 +3,7 @@ import { memo, useCallback, useState } from "react";
 
 import toast from "react-hot-toast";
 import TodoItem from "./TodoItem";
+
 const TodoList = ({
   todos,
   setTodo,
@@ -70,6 +71,11 @@ const TodoList = ({
         });
 
         const data: TodoResponse = await res.json();
+        
+        if (data.success === false) {
+          toast.error("Enter All Fiels & Min 5 letter");
+          return;
+        }
 
         setTodo((prev) =>
           prev.map((todo) => (todo._id === id ? data.data : todo))

@@ -6,7 +6,8 @@ import { createBrowserRouter, RouterProvider } from 'react-router';
 const router  = createBrowserRouter([
   {
     path: "/",
-    Component: App
+    Component: App,
+    errorElement: <div>Sorry Something Happen</div>
   },
 
 ])

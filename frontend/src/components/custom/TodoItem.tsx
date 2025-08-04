@@ -3,7 +3,7 @@ import { Pencil, SaveIcon, Trash2 } from "lucide-react";
 import { Input } from "../ui/input";
 import { Textarea } from "../ui/textarea";
 import { memo } from "react";
-import type {EditValues, Todo, ToggleEdit } from "@/types/types";
+import type { EditValues, Todo, ToggleEdit } from "@/types/types";
 import toast from "react-hot-toast";
 
 const TodoItem = memo(
@@ -16,24 +16,23 @@ const TodoItem = memo(
     DeleteTodoHandler,
     complateTodoHandler,
     setEditValues,
-    i
+    i,
   }: {
     todo: Todo;
     editMode: { title: boolean; description: boolean };
-    editValue:  { title?: string; description?: string };
+    editValue: { title?: string; description?: string };
     toggleEdit: ToggleEdit;
     UpdateTodo: (id: string) => Promise<void>;
-    DeleteTodoHandler:  (id: string) => Promise<void>;
-    complateTodoHandler:  (id: string, value: boolean) => Promise<void>;
+    DeleteTodoHandler: (id: string) => Promise<void>;
+    complateTodoHandler: (id: string, value: boolean) => Promise<void>;
     setEditValues: React.Dispatch<React.SetStateAction<EditValues>>;
-    i:number;
+    i: number;
   }) => {
-    
-    const isEditing = editMode || {}; 
+    const isEditing = editMode || {};
     const edits = editValue || {};
+
     return (
       <>
-        
         <div className="flex gap-1 mb-1 items-center shadow-md p-1.5  rounded-md">
           <div
             className={`hover:bg-accent/50 w-sm flex items-start gap-3 rounded-lg border p-3 ${

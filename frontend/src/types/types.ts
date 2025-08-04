@@ -6,8 +6,12 @@ export type Todo = {
   updatedAt: string;
   _id: string;
 };
+export interface ErrorRenponse {
+  success: boolean;
+  message: string;
+}
 
-export interface TodoResponse {
+export interface TodoResponse extends ErrorRenponse {
   message: string;
   data: Todo;
 }
