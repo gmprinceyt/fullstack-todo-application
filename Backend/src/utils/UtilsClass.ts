@@ -1,4 +1,4 @@
-export class CoustomError extends Error {
+export class CustomError extends Error {
     constructor(public message: string , public status: number=500 ){
         super(message)
         this.status = status
