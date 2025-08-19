@@ -1,8 +1,9 @@
 import mongoose from "mongoose";
+import { environmentVariables } from "./index.js";
 
 export const Connect = async () => {
   try {
-    const instance = await mongoose.connect("mongodb://127.0.0.1:27017/todo");
+    const instance = await mongoose.connect(environmentVariables.MongoDB_URL);
     if (instance.connection.host) {
       console.log("Database Connect Successfully ✅");
     }
