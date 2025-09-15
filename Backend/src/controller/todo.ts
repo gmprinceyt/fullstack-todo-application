@@ -1,8 +1,9 @@
 import { Todo } from "../model/Todo.js";
 import { TryCatch } from "../utils/Handlers.js";
 import { ApiRespones, CustomError } from "../utils/UtilsClass.js";
-import { TodoSchema, TodoUpdateSchema } from "../utils/zod.js";
-
+import { TodoUpdateSchema } from "../utils/zod.js";
+import {TodoSchema} from "@gmprincedev/common"
+  
 export const createTodo = TryCatch(async (req, res, next) => {
   // input Vaildation using Zod
   const vaildation = TodoSchema.safeParse(req.body);
