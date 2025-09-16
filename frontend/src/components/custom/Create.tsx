@@ -4,28 +4,29 @@ import { Input } from "../ui/input";
 import toast from "react-hot-toast";
 import type { Todo } from "@/types/types";
 import { memo, useCallback, useState } from "react";
+import { type  TodoSchemaF } from "@gmprincedev/common";
 import useDebounce from "@/hooks/useDebounce";
 
 const Create = memo(
   ({ setTodo }: { setTodo: React.Dispatch<React.SetStateAction<Todo[]>> }) => {
-    const [title, setTitle] = useState<string | undefined>(undefined);
-    const [description, setDescription] = useState<string | undefined>(
-      undefined
-    );
-    const [Debounce] = useDebounce();
+    const [title, setTitle] = useState<string>("");
+    const [description, setDescription] = useState<string>("");
+    const Dtitle = useDebounce(title)
+    const Ddescription = useDebounce(description)
 
     const AddTodoHandler = useCallback(
       async function () {
+        const RequestData: TodoSchemaF = {
+          title: Dtitle,
+          description: Ddescription,
+        };
         try {
           const res = await fetch("http://localhost:3000/api/v1/todo/new", {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
             },
-            body: JSON.stringify({
-              title: title,
-              description: description,
-            }),
+            body: JSON.stringify(RequestData),
           });
           const data = await res.json();
 
@@ -39,12 +40,12 @@ const Create = memo(
           toast.success("New Added");
           setTitle("");
           setDescription("");
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (error) {
           toast.error("Todo Creation Failed");
+          console.log(error)
         }
       },
-      [description, setTodo, title]
+      [Ddescription, setTodo, Dtitle]
     );
     return (
       <>
@@ -52,8 +53,10 @@ const Create = memo(
           <div className="flex gap-1">
             <Input
               onChange={(e) => {
-                Debounce(setTitle, e.target.value);
+                setTitle(e.target.value);
+
               }}
+              value={title}
               type="text"
               placeholder="Enter Title "
               className="mb-2"
@@ -64,8 +67,9 @@ const Create = memo(
           </div>
           <Textarea
             onChange={(e) => {
-              Debounce(setDescription, e.target.value);
+              setDescription(e.target.value);
             }}
+            value={description}
             placeholder="Type your message here."
           />
         </div>

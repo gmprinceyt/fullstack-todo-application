@@ -9,5 +9,6 @@ export const Connect = async () => {
     }
   } catch (error) {
     console.log("Database Connection failed", error);
+    process.exit(1)
   }
 };

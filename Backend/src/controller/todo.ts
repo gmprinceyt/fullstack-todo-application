@@ -1,7 +1,7 @@
 import { Todo } from "../model/Todo.js";
 import { TryCatch } from "../utils/Handlers.js";
 import { ApiRespones, CustomError } from "../utils/UtilsClass.js";
-import { TodoUpdateSchema } from "../utils/zod.js";
+import { TodoUpdateSchema } from "@gmprincedev/common";
 import {TodoSchema} from "@gmprincedev/common"
   
 export const createTodo = TryCatch(async (req, res, next) => {
